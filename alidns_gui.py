@@ -69,7 +69,7 @@ class Application(Frame):
         wanip = json.load(request.urlopen('https://api.ipify.org/?format=json'))['ip']
         self.wanipEntry.insert(0,wanip)
         domain = self.domainEntry.get()
-        DDns.save_records(self.accessKeyId,self.accessSecret,domain)
+        DDns.save_records(self.accessKeyIdEntry.get(),self.accessSecretEntry.get(),domain)
         with open('records.json','r') as recordsfile:
             jsonfile = json.load(recordsfile)
             records = jsonfile["DomainRecords"]["Record"]
@@ -92,7 +92,7 @@ class Application(Frame):
         userid = self.accessKeyIdEntry.get()
         usersecert = self.accessSecretEntry.get()
         if userid  and usersecert :
-            jsonfile = {"accessKeyId":self.accessKeyIdEntry.get(),"accessSecret":self.accessSecretEntry.get()}
+            jsonfile = {"accessKeyId":self.accessKeyIdEntry.get(),"accessSecret":self.accessSecretEntry.get(),"domain":self.domainEntry.get()}
             with open('account.json','w') as accountfile:
                 json.dump(jsonfile, accountfile, sort_keys=True, indent=4, separators=(',', ': '))
             return 1
@@ -104,6 +104,7 @@ class Application(Frame):
         Label(self).grid(row=0,column=0)
         self.accessKeyId = ""
         self.accessSecret = ""
+        self.domain = ""
         isexist = os.path.exists('account.json')
         print(isexist)
         if isexist :
@@ -111,9 +112,11 @@ class Application(Frame):
                 jsonfile = json.load(accountfile)
                 accessKeyId = jsonfile["accessKeyId"]
                 accessSecret = jsonfile["accessSecret"]
+                dnsdomain = jsonfile["domain"]
                 if accessKeyId != None and accessSecret != None:
                     self.accessKeyId = accessKeyId
                     self.accessSecret = accessSecret
+                    self.domain = dnsdomain
         self.accessKeyIdLabel = Label(self)
         self.accessKeyIdLabel["text"] = "accessKeyId："
         self.accessKeyIdLabel.grid(row = 1,column = 0)
@@ -136,6 +139,7 @@ class Application(Frame):
 
         self.domainEntry = Entry(self)
         self.domainEntry.grid(row = 1,column = 5)
+        self.domainEntry.insert(0,self.domain)
 
         self.inputbutton = Button(self)
         self.inputbutton["text"] = "确定"
