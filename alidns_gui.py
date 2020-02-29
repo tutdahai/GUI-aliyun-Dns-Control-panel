@@ -194,7 +194,7 @@ class Application(Frame):
 
 
 
-root = Tk(className="ALi-Dns")
+root = Tk(className="GUI aliyun Dns Control panel")
 root.geometry("1000x430+110+50")
 app = Application(master=root)
 app.mainloop()
