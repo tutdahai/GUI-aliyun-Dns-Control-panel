@@ -42,7 +42,7 @@ class Utils:
         # print(str(response, encoding='utf-8'))
         
     @staticmethod
-    def update_record(accessKeyId,accessSecret,recordid,RR,Type,ip):
+    def update_mxrecord(accessKeyId,accessSecret,recordid,RR,Type,target,Priority):
         
         client = AcsClient(accessKeyId, accessSecret, 'cn-hangzhou')
 
@@ -52,7 +52,8 @@ class Utils:
         request.set_RecordId(recordid)
         request.set_RR(RR)
         request.set_Type(Type)
-        request.set_Value(ip)
+        request.set_Value(target)
+        request.set_Priority(Priority)
 
         response = client.do_action_with_exception(request)
         # python2:  print(response) 
@@ -60,7 +61,25 @@ class Utils:
         # print(str(response, encoding='utf-8'))
 
     @staticmethod
-    def add_record(accessKeyId,accessSecret,DomainName,RR,Type,ip):
+    def update_record(accessKeyId,accessSecret,recordid,RR,Type,target):
+        
+        client = AcsClient(accessKeyId, accessSecret, 'cn-hangzhou')
+
+        request = UpdateDomainRecordRequest()
+        request.set_accept_format('json')
+
+        request.set_RecordId(recordid)
+        request.set_RR(RR)
+        request.set_Type(Type)
+        request.set_Value(target)
+
+        response = client.do_action_with_exception(request)
+        # python2:  print(response) 
+        # return response
+        # print(str(response, encoding='utf-8'))
+
+    @staticmethod
+    def add_record(accessKeyId,accessSecret,DomainName,RR,Type,target,Priority):
         client = AcsClient(accessKeyId, accessSecret, 'cn-hangzhou')
 
         request = AddDomainRecordRequest()
@@ -69,7 +88,8 @@ class Utils:
         request.set_DomainName(DomainName)
         request.set_RR(RR)
         request.set_Type(Type)
-        request.set_Value(ip)
+        request.set_Value(target)
+        request.set_Priority(Priority)
 
         response = client.do_action_with_exception(request)
         # python2:  print(response) 

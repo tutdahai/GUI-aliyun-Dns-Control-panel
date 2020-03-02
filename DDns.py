@@ -12,7 +12,7 @@ class DDns:
             json.dump(jsonfile, recordsfile, sort_keys=True, indent=4, separators=(',', ': '))  
 
     @staticmethod
-    def add_record(accessKeyId,accessSecret,DomainName,record_RR,record_type,wanip):
+    def add_record(accessKeyId,accessSecret,DomainName,record_RR,record_type,target,priority):
         with open('records.json','r') as recordsfile:
             jsonfile = json.load(recordsfile)
             records = jsonfile["DomainRecords"]["Record"]
@@ -25,23 +25,47 @@ class DDns:
                     continue
             else:
                 continue
-        Utils.add_record(accessKeyId,accessSecret,DomainName,record_RR,record_type,wanip)
+        Utils.add_record(accessKeyId,accessSecret,DomainName,record_RR,record_type,target,priority)
         return "victory"
                   
 
     @staticmethod
-    def update_record(accessKeyId,accessSecret,record_RR,record_type,wanip):
+    def update_mxrecord(accessKeyId,accessSecret,record_RR,record_type,target,priority):
         with open('records.json','r') as recordsfile:
             jsonfile = json.load(recordsfile)
             records = jsonfile["DomainRecords"]["Record"]
         flag = 0
         for record in records:
             if record["RR"] == record_RR and record["Type"] == record_type:
-                if record["Value"] != wanip:
+                if record["Value"] != target:
                     recordid = record["RecordId"]
-                    Utils.update_record(accessKeyId,accessSecret,recordid,record_RR,record_type,wanip)
+                    Utils.update_mxrecord(accessKeyId,accessSecret,recordid,record_RR,record_type,target,priority)
                     return "victory"
-                else :
+                elif "Priority" in record:
+                    if record['Priority'] != priority:
+                        recordid = record["RecordId"]
+                        Utils.update_mxrecord(accessKeyId,accessSecret,recordid,record_RR,record_type,target,priority)
+                        return "victory"
+                else:
+                    return "already"
+            else:
+                continue
+        if flag == 0 :
+            return "fail"
+
+    @staticmethod
+    def update_record(accessKeyId,accessSecret,record_RR,record_type,target):
+        with open('records.json','r') as recordsfile:
+            jsonfile = json.load(recordsfile)
+            records = jsonfile["DomainRecords"]["Record"]
+        flag = 0
+        for record in records:
+            if record["RR"] == record_RR and record["Type"] == record_type:
+                if record["Value"] != target:
+                    recordid = record["RecordId"]
+                    Utils.update_record(accessKeyId,accessSecret,recordid,record_RR,record_type,target)
+                    return "victory"
+                else:
                     return "already"
             else:
                 continue
