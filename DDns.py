@@ -12,7 +12,24 @@ class DDns:
             json.dump(jsonfile, recordsfile, sort_keys=True, indent=4, separators=(',', ': '))  
 
     @staticmethod
-    def add_record(accessKeyId,accessSecret,DomainName,record_RR,record_type,target,priority):
+    def add_record(accessKeyId,accessSecret,DomainName,record_RR,record_type,target):
+        with open('records.json','r') as recordsfile:
+            jsonfile = json.load(recordsfile)
+            records = jsonfile["DomainRecords"]["Record"]
+        flag = 0
+        for record in records:
+            if record["RR"] == record_RR:
+                if record["Type"] == record_type:
+                    return "already"
+                else:
+                    continue
+            else:
+                continue
+        Utils.add_record(accessKeyId,accessSecret,DomainName,record_RR,record_type,target)
+        return "victory"
+                  
+    @staticmethod
+    def add_mxrecord(accessKeyId,accessSecret,DomainName,record_RR,record_type,target,priority):
         with open('records.json','r') as recordsfile:
             jsonfile = json.load(recordsfile)
             records = jsonfile["DomainRecords"]["Record"]
@@ -27,7 +44,6 @@ class DDns:
                 continue
         Utils.add_record(accessKeyId,accessSecret,DomainName,record_RR,record_type,target,priority)
         return "victory"
-                  
 
     @staticmethod
     def update_mxrecord(accessKeyId,accessSecret,record_RR,record_type,target,priority):

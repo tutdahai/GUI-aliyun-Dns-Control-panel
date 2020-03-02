@@ -79,7 +79,23 @@ class Utils:
         # print(str(response, encoding='utf-8'))
 
     @staticmethod
-    def add_record(accessKeyId,accessSecret,DomainName,RR,Type,target,Priority):
+    def add_record(accessKeyId,accessSecret,DomainName,RR,Type,target):
+        client = AcsClient(accessKeyId, accessSecret, 'cn-hangzhou')
+
+        request = AddDomainRecordRequest()
+        request.set_accept_format('json')
+
+        request.set_DomainName(DomainName)
+        request.set_RR(RR)
+        request.set_Type(Type)
+        request.set_Value(target)
+
+        response = client.do_action_with_exception(request)
+        # python2:  print(response) 
+        # print(str(response, encoding='utf-8'))
+
+    @staticmethod
+    def add_mxrecord(accessKeyId,accessSecret,DomainName,RR,Type,target,Priority):
         client = AcsClient(accessKeyId, accessSecret, 'cn-hangzhou')
 
         request = AddDomainRecordRequest()
