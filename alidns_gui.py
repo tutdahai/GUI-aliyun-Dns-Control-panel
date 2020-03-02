@@ -15,22 +15,83 @@ class Application(Frame):
         for item in x:
             self.table.delete(item)
 
+    def onselect(self,event):
+        if self.typecmbx.get() == 'MX':
+            self.onshow()
+        else:
+            self.onhidde()
+
+    def onshow(self):
+        self.priorityEntry.grid(row=6,column=1)
+        self.priorityLabel.grid(row=6,column=0)
+    
+    def onhidde(self):
+        self.priorityLabel.grid_forget()
+        self.priorityEntry.grid_forget()
+
     def getArea(self,event):
         for item in self.table.selection():
             item_text = self.table.item(item,"values")
         self.flashArea()
         self.changeRREntry.insert(0,item_text[1])
-        self.changetypeEntry.insert(0,item_text[2])
         self.changetargetentry.insert(0,item_text[3])
         self.recordid = item_text[0]
+        # self.changetypeEntry.insert(0,item_text[2])
+        flag = -1
+        dnstype = str(item_text[2])
+        if dnstype == 'A':
+            flag = 0
+        elif dnstype == 'CNAME':
+            flag = 1
+        elif dnstype == 'AAAA':
+            flag = 2
+        elif dnstype == 'NS':
+            flag = 3
+        elif dnstype == 'MX':
+            flag = 4
+        elif dnstype == 'SRV':
+            flag = 5
+        elif dnstype == 'TXT':
+            flag = 6
+        elif dnstype == 'CAA':
+            flag = 7
+        self.typecmbx.current(flag)
+        if flag == 4:
+            self.onshow()
+            self.priorityEntry.delete(0,'end')
+            priority = re.findall(r':([0-9]+)',item_text[3])
+            self.priorityEntry.insert(0,priority[0])
+            target = re.findall(r'([a-z.]+):',item_text[3])
+            self.changetargetentry.delete(0,'end')
+            self.changetargetentry.insert(0,target[0])
+
+            # with open('records.json','r') as recordsfile:
+            #     jsonfile = json.load(recordsfile)
+            #     records = jsonfile["DomainRecords"]["Record"]
+            #     i = 0
+            #     for record in records:
+            #         if record['RecordId'] == self.recordid:
+            #             self.priorityEntry.insert(0,record['Priority'])
+        else:
+            self.onhidde()
+        
     
     def flashArea(self):
         self.changeRREntry.delete(0,'end')
-        self.changetypeEntry.delete(0,'end')
+        # self.changetypeEntry.delete(0,'end')
+        self.typecmbx['values'] = ('','')
+        self.typecmbx.current(0)
+        self.typecmbx['values'] = ('A','CNAME','AAAA','NS','MX','SRV','TXT','CAA')
         self.changetargetentry.delete(0,'end')
 
     def adddns(self):
-        res = DDns.add_record(self.accessKeyIdEntry.get(),self.accessSecretEntry.get(),self.domainEntry.get(),self.changeRREntry.get(),self.changetypeEntry.get(),self.changetargetentry.get())
+        dnstype = self.typecmbx.get()
+        if dnstype == None:
+            tkinter.messagebox.showerror("警告","请选择记录类型")
+        elif dnstype == 'MX':
+            res = DDns.add_record(self.accessKeyIdEntry.get(),self.accessSecretEntry.get(),self.domain,self.changeRREntry.get(),dnstype,self.changetargetentry.get(),self.priorityEntry.get())
+        else:
+            res = DDns.add_record(self.accessKeyIdEntry.get(),self.accessSecretEntry.get(),self.domain,self.changeRREntry.get(),dnstype,self.changetargetentry.get(),None)
         if res == "victory":
             tkinter.messagebox.showinfo("提示","添加成功")
         elif res == "already":
@@ -50,7 +111,13 @@ class Application(Frame):
         self.showRecords()
 
     def updatedns(self):
-        res = DDns.update_record(self.accessKeyIdEntry.get(),self.accessSecretEntry.get(),self.changeRREntry.get(),self.changetypeEntry.get(),self.changetargetentry.get())
+        dnstype = self.typecmbx.get()
+        if dnstype == None:
+            tkinter.messagebox.showerror("警告","请选择记录类型")
+        elif dnstype == 'MX':
+            res = DDns.update_mxrecord(self.accessKeyIdEntry.get(),self.accessSecretEntry.get(),self.changeRREntry.get(),dnstype,self.changetargetentry.get(),self.priorityEntry.get())
+        else:
+            res = DDns.update_record(self.accessKeyIdEntry.get(),self.accessSecretEntry.get(),self.changeRREntry.get(),dnstype,self.changetargetentry.get())
         if res == "victory":
             tkinter.messagebox.showinfo("提示","修改成功")
         elif res == "already":
@@ -68,14 +135,18 @@ class Application(Frame):
         self.wanipEntry.delete(0,'end')
         wanip = json.load(request.urlopen('https://api.ipify.org/?format=json'))['ip']
         self.wanipEntry.insert(0,wanip)
-        domain = self.domainEntry.get()
-        DDns.save_records(self.accessKeyIdEntry.get(),self.accessSecretEntry.get(),domain)
+        self.domain = self.domainEntry.get()
+        DDns.save_records(self.accessKeyIdEntry.get(),self.accessSecretEntry.get(),self.domain)
         with open('records.json','r') as recordsfile:
             jsonfile = json.load(recordsfile)
             records = jsonfile["DomainRecords"]["Record"]
             i = 0
             for record in records:
-                self.table.insert('',i,values=(record["RecordId"],record["RR"],record["Type"],record["Value"]))
+                if "Priority" in record:
+                    self.table.insert('',i,values=(record["RecordId"],record["RR"],record["Type"],record["Value"]+':'+str(record["Priority"])))
+                else:
+                    self.table.insert('',i,values=(record["RecordId"],record["RR"],record["Type"],record["Value"]))
+
                 i += 1
 
     def checkDomain(self):
@@ -157,8 +228,8 @@ class Application(Frame):
         self.sbar.configure(command=self.table.yview)
         self.table.grid(row = 3,column = 0,columnspan=7)
         self.table.column('record_id',width=200,anchor='center')
-        self.table.column('record_RR',width=150,anchor='center')
-        self.table.column('record_type',width=50,anchor='center')
+        self.table.column('record_RR',width=130,anchor='center')
+        self.table.column('record_type',width=80,anchor='center')
         self.table.column('record_target',width=400,anchor='center')
         self.table.heading('record_id',text='记录ID')
         self.table.heading('record_RR',text='主机记录')
@@ -174,12 +245,25 @@ class Application(Frame):
         self.changeRREntry.grid(row=5,column=1)
 
         self.typeLabel = Label(self,text = '记录类型：').grid(row=5,column=2)
-        self.changetypeEntry = Entry(self)
-        self.changetypeEntry.grid(row=5,column=3)
+        self.typecmbx = ttk.Combobox(self)
+        self.typecmbx.grid(row=5,column=3)
+        self.typecmbx['values'] = ('A','CNAME','AAAA','NS','MX','SRV','TXT','CAA')
+        self.typecmbx.bind("<<ComboboxSelected>>",self.onselect)
+        # self.typecmbx.current(0)
+
+        # self.changetypeEntry = Entry(self)
+        # self.changetypeEntry.grid(row=5,column=3)
 
         self.targetLabel = Label(self,text = '记录值：').grid(row=5,column=4)
         self.changetargetentry = Entry(self)
         self.changetargetentry.grid(row=5,column=5)
+
+        self.priorityLabel = Label(self,text="优先级：")
+        self.priorityLabel.grid(row=6,column=0)
+        self.priorityEntry = Entry(self,text="5")
+        self.priorityEntry.grid(row=6,column=1)
+        self.priorityLabel.grid_forget()
+        self.priorityEntry.grid_forget()
 
         self.adddnsButton = Button(self,text="添加",command=self.adddns).grid(row=6,column=3)
         self.deleteButton = Button(self,text="删除",command=self.deletedns).grid(row=6,column=4)
