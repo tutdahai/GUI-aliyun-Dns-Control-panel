@@ -4,7 +4,7 @@ block_cipher = None
 
 
 a = Analysis(['alidns_gui.py'],
-             pathex=['D:\\Desktop\\aliddns'],
+             pathex=['D:\\GitHub\\GUI-aliyun-Dns-Control-panel'],
              binaries=[],
              datas=[],
              hiddenimports=['queue'],
