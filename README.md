@@ -1,6 +1,6 @@
 # GUI-aliyun-Dns-Control-panel
 
-dns阿里云解析api+python3开发的解析记录管理工具
+dns阿里云解析api+python3开发的域名解析记录管理工具
 
 >本工具基于阿里云API开放接口
 >>另有精简工具可用于阿里云解析的动态域名解析，详情见 https://github.com/tutdahai/aliDDns
